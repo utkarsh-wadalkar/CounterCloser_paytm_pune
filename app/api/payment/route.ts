@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createQr, paymentConfigured, verifyPayment } from "@/lib/paytm";
+import { createPayment, paymentConfigured, verifyPayment } from "@/lib/paytm";
 import { PosError } from "@/lib/pos";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const { action, orderId } = await request.json();
     if (typeof orderId !== "string") throw new PosError("Invalid order ID.");
-    if (action === "create") return NextResponse.json(await createQr(orderId));
+    if (action === "create") return NextResponse.json(await createPayment(orderId));
     if (action === "verify") return NextResponse.json(await verifyPayment(orderId));
     throw new PosError("Unknown payment action.");
   } catch (error) {

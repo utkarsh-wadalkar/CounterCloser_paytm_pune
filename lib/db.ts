@@ -48,8 +48,14 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status text NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid','pending','paid','failed')),
   total_paise integer NOT NULL,
   qr_image text,
+  payment_method text CHECK (payment_method IN ('qr','link')),
+  payment_link_id text,
+  payment_link_url text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method text CHECK (payment_method IN ('qr','link'));
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_link_id text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_link_url text;
 CREATE TABLE IF NOT EXISTS order_items (
   order_id uuid NOT NULL REFERENCES orders(id),
   product_id text NOT NULL,

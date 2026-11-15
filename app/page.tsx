@@ -133,13 +133,13 @@ export default function CustomerPage() {
   const total = cart.reduce((sum, item) => sum + item.unit_price_paise * item.quantity, 0);
   const activeOrder = snapshot?.orders.find(order => order.status !== "cancelled");
   useEffect(() => {
-    if (!activeOrder?.qr_image || activeOrder.payment_status === "paid") return;
+    if ((!activeOrder?.qr_image && !activeOrder?.payment_link_url) || activeOrder.payment_status === "paid") return;
     const timer = window.setInterval(async () => {
       try { await post("/api/payment", { action: "verify", orderId: activeOrder.id }); await refresh(table); }
       catch { /* The visible status remains pending until a verified result arrives. */ }
     }, 10000);
     return () => window.clearInterval(timer);
-  }, [activeOrder?.id, activeOrder?.qr_image, activeOrder?.payment_status, table, refresh]);
+  }, [activeOrder?.id, activeOrder?.qr_image, activeOrder?.payment_link_url, activeOrder?.payment_status, table, refresh]);
   const products = (snapshot?.products ?? []).filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
   const categories = [...new Set(products.map(item => item.category))];
 
@@ -172,7 +172,7 @@ export default function CustomerPage() {
           <div className="voice-control"><button className={`voice-button ${voiceStatus === "live" ? "recording" : ""}`} onClick={() => void toggleVoice()} disabled={voiceStatus === "connecting"}><span>◉</span>{voiceStatus === "live" ? "End live call" : "Talk to Roy"}</button><span>{voiceConfig?.configured ? "Microphone + speaker" : "Voice setup needed"}</span></div>
         </section>
         <section className="panel cart-panel"><div className="cart-heading"><div><p className="eyebrow">YOUR ORDER</p><h3>Table {table} bill</h3></div><span className="count-tag">{cart.reduce((sum, item) => sum + item.quantity, 0)} items</span></div>{cart.length ? <div className="cart-lines">{cart.map(item => <div className="cart-line" key={`${item.product_id}-${item.option_name}`}><div><strong>{item.name}</strong><small>{item.option_name || "Standard"}</small></div><span className="cart-quantity">× {item.quantity}</span><strong>{rupees(item.quantity * item.unit_price_paise)}</strong></div>)}</div> : <div className="empty-cart"><span>◇</span><p>Your cart is waiting.</p><small>Tell Roy what you would like from the menu.</small></div>}<div className="bill-total"><span>Subtotal</span><strong>{rupees(total)}</strong></div><p className="cart-hint">Ask Roy to change an item, clear the cart, or confirm your order.</p></section>
-        {activeOrder && <section className="panel receipt-panel"><p className="eyebrow">LATEST ORDER</p><div className="receipt-heading"><strong>Bill #{activeOrder.id.slice(0, 8)}</strong><span className="status-chip">{activeOrder.status}</span></div><div className="receipt-lines">{activeOrder.items.map((item, index) => <div key={`${item.product_id}-${index}`}><span>{item.quantity} × {item.name}{item.option_name ? ` · ${item.option_name}` : ""}</span><strong>{rupees(item.quantity * item.unit_price_paise)}</strong></div>)}</div><div className="bill-total"><span>Total due</span><strong>{rupees(activeOrder.total_paise)}</strong></div><p className="payment-state">Payment: <b>{activeOrder.payment_status}</b></p>{activeOrder.qr_image ? <div className="qr-wrap"><img src={activeOrder.qr_image} alt="Paytm QR for this bill" width="180" height="180"/><small>Scan with a UPI app. Roy checks payment automatically.</small></div> : <p className="cart-hint">Ask Roy for a Paytm QR to pay this bill.</p>}</section>}
+        {activeOrder && <section className="panel receipt-panel"><p className="eyebrow">LATEST ORDER</p><div className="receipt-heading"><strong>Bill #{activeOrder.id.slice(0, 8)}</strong><span className="status-chip">{activeOrder.status}</span></div><div className="receipt-lines">{activeOrder.items.map((item, index) => <div key={`${item.product_id}-${index}`}><span>{item.quantity} × {item.name}{item.option_name ? ` · ${item.option_name}` : ""}</span><strong>{rupees(item.quantity * item.unit_price_paise)}</strong></div>)}</div><div className="bill-total"><span>Total due</span><strong>{rupees(activeOrder.total_paise)}</strong></div><p className="payment-state">Payment: <b>{activeOrder.payment_status}</b></p>{activeOrder.qr_image ? <div className="qr-wrap"><img src={activeOrder.qr_image} alt="Paytm QR for this bill" width="180" height="180"/><small>Scan with a UPI app. Roy checks payment automatically.</small></div> : activeOrder.payment_link_url ? <div className="qr-wrap"><a href={activeOrder.payment_link_url} target="_blank" rel="noopener noreferrer">Open Paytm payment link ↗</a><small>Roy checks payment automatically.</small></div> : <p className="cart-hint">Ask Roy to pay this bill.</p>}</section>}
       </aside>
     </div>
     <footer className="footer">COUNTERCLOSER AI <span>·</span> MADE FOR THE MOMENT AT THE COUNTER <span>·</span> LOCAL CAFÉ DEMO</footer>

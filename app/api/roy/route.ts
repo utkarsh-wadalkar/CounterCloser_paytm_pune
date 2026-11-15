@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addMany, changeCart, clearCart, confirmOrder, PosError, setCartOption, state, tableNumber } from "@/lib/pos";
-import { createQr, verifyPayment } from "@/lib/paytm";
+import { createPayment, verifyPayment } from "@/lib/paytm";
 
 export const runtime = "nodejs";
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
     if (/\b(confirm (my |the )?order|place (my |the )?order|make (my |the )?bill|that'?s all|finished ordering)\b/.test(normalized)) {
       const result = await confirmOrder(table);
-      return NextResponse.json({ message: `Your order is confirmed for table ${table}. The bill is ${money(result.totalPaise)} and the kitchen has your ticket. Ask me for a Paytm QR when you’re ready to pay.`, state: await state(table), suggestions: [] });
+      return NextResponse.json({ message: `Your order is confirmed for table ${table}. The bill is ${money(result.totalPaise)} and the kitchen has your ticket. Ask me to pay when you’re ready.`, state: await state(table), suggestions: [] });
     }
     if (/\b(check payment|payment status|is (it|my bill) paid)\b/.test(normalized)) {
       const order = current.orders.find(item => item.status !== "cancelled");
@@ -131,8 +131,11 @@ export async function POST(request: NextRequest) {
     if (/\b(pay|payment|qr code|paytm qr|scan)\b/.test(normalized) && !/\b(what|how|can i)\b/.test(normalized)) {
       const order = current.orders.find(item => item.status !== "cancelled");
       if (!order) throw new PosError("Confirm an order first.");
-      await createQr(order.id);
-      return NextResponse.json({ message: `Your Paytm QR is on the bill for ${money(order.total_paise)}. Scan it with a UPI app; I’ll verify the payment.`, state: await state(table), suggestions: [] });
+      const payment = await createPayment(order.id);
+      const message = payment.qrImage
+        ? `Your Paytm QR is on the bill for ${money(order.total_paise)}. Scan it with a UPI app; I’ll verify the payment.`
+        : `Your Paytm payment link is on the bill for ${money(order.total_paise)}. Open it to pay; I’ll verify the payment.`;
+      return NextResponse.json({ message, state: await state(table), suggestions: [] });
     }
     const lines = mentioned(normalized, products);
     if (!lines.length) {

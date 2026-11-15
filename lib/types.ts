@@ -8,6 +8,7 @@ export type OrderItem = CartItem & { order_id: string };
 export type Order = {
   id: string; table_no: number; status: "new" | "preparing" | "ready" | "served" | "cancelled";
   payment_status: "unpaid" | "pending" | "paid" | "failed";
-  total_paise: number; qr_image: string | null; created_at: string; items: OrderItem[];
+  total_paise: number; qr_image: string | null; payment_method: "qr" | "link" | null;
+  payment_link_id: string | null; payment_link_url: string | null; created_at: string; items: OrderItem[];
 };
 export type PosState = { products: Product[]; cart: CartItem[]; orders: Order[] };

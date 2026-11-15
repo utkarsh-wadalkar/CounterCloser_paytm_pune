@@ -1,6 +1,6 @@
 # CounterCloser AI
 
-A local café POS with a customer ordering page at `/` and a kitchen/merchant dashboard at `/admin`. The customer catalog is a read-only list with flavor drop downs and a price column. Roy handles every cart action through voice or text, suggests catalogued add-ons and in-stock substitutes, confirms the bill, and can create a Paytm QR. A configured Sarvam Voice Agent uses the browser microphone and speaker.
+A local café POS with a customer ordering page at `/` and a kitchen/merchant dashboard at `/admin`. The customer catalog is a read-only list with flavor drop downs and a price column. Roy handles every cart action through voice or text, suggests catalogued add-ons and in-stock substitutes, confirms the bill, and can create a Paytm QR or payment link. A configured Sarvam Voice Agent uses the browser microphone and speaker.
 
 ## Run locally
 
@@ -22,7 +22,7 @@ The current local `.env` already has the PostgreSQL connection, the standard Sar
 | `SARVAM_ORG_ID`, `SARVAM_WORKSPACE_ID` | Browser Voice Agent workspace | Already filled from the project plan |
 | `SARVAM_VOICE_AGENT_API_KEY` | Separate Voice Agents key; kept server side by the signed URL proxy | Needed for live voice |
 | `SARVAM_VOICE_APP_ID` | ID of a deployed browser-compatible Roy Voice Agent app | Needed for live voice |
-| `PAYTM_MID`, `PAYTM_MERCHANT_KEY`, `PAYTM_POS_ID` | Paytm staging Dynamic QR and transaction status | Needed for live QR |
+| `PAYTM_MID`, `PAYTM_MERCHANT_KEY`, `PAYTM_POS_ID` | Paytm staging Dynamic QR, Payment Link fallback, and transaction status | Needed for live payment |
 | `PAYTM_CLIENT_ID` | Paytm client ID when the merchant has more than one key | Account dependent |
 | `PAYTM_ENV` | `staging` is the only supported setting here | Already defaults to staging |
 
@@ -34,7 +34,7 @@ The Voice Agent SDK handles live speech input and output, so it does not require
 - Order a **cheese burger**. Roy offers fries and a drink and asks about ketchup or mayonnaise. Accepted flavors, sauces, and items appear in the cart and bill. All synthetic flavors currently have the same base item price.
 - The catalog editor changes available stock, price, and visibility. Cart lines hold the price from when each item was added.
 - The kitchen advances a ticket from **new → preparing → ready → served**. A new order without a payment request can be cancelled, returning reserved stock.
-- If Paytm staging credentials are present, ask Roy for a **Paytm QR** after confirming. The bill becomes **paid** only after the server verifies Paytm's signed transaction status, order ID, and amount. Without credentials, the UI shows a setup error and never simulates payment.
+- If Paytm staging credentials are present, ask Roy to **pay** after confirming. Roy first requests a Dynamic QR. If Paytm explicitly reports that UPI QR is disabled for the merchant, Roy creates a fixed-amount Payment Link instead. The bill becomes **paid** only after the server verifies Paytm's signed transaction status, order ID, and amount. Without credentials, the UI shows a setup error and never simulates payment.
 - A draft cart untouched for 15 minutes expires and releases its stock the next time the POS checks for stale carts.
 
 This is a localhost demo with synthetic menu data and no login, as requested. Live Voice Agent calling and Paytm payments cannot be exercised until those provider credentials and app access are present. The voice agent's hosted configuration is separate from this repository; keep its ordering behavior aligned with the current catalog.
