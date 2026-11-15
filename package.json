@@ -1,0 +1,27 @@
+{
+  "name": "countercloser-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack -H 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start -H 127.0.0.1",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^16.0.0",
+    "paytmchecksum": "^1.5.1",
+    "pg": "^8.16.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sarvam-conv-ai-sdk": "^0.0.42",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}
